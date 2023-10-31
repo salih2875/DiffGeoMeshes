@@ -47,6 +47,12 @@
       scene.add(camera);
 
       document.getElementById("render").addEventListener("click", async function () {
+          
+          // clean up
+          document.getElementById("g").textContent = "";
+          document.getElementById("m").textContent = "";
+          document.getElementById("f").textContent = "";
+          document.getElementById("s").textContent = "";
           while (scene.children.length > 0) {
             scene.remove(scene.children[0]);
           }
