@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!--         <div>
+		  <input id ="url" name="filename" placeholder="Put your mesh url here" type="text">
+		  <button id= "button" type="submit" >Compute curvatures</button>
+		</div>
+		  <div>
+		  <input id="scale" name="scaling" placeholder="Put your scale here"  type="text">
+		  <button id= "render" type="submit" >Render</button>
+		</div> -->
+
+  <body>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script src="parsemesh.js"></script>
+    <script src="wasm.js"></script>
+    <script src="gausswasm.js"></script>
+
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import {
+        CSS2DRenderer,
+        CSS2DObject,
+      } from "three/addons/renderers/CSS2DRenderer.js";
+
+      let camera, scene, renderer;
+
+      let object;
+
+      camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        20
+      );
+      camera.position.z = 7;
+
+      // scene
+
+      scene = new THREE.Scene();
+
+      const ambientLight = new THREE.AmbientLight(0xffffff);
+      scene.add(ambientLight);
+
+      const pointLight = new THREE.PointLight(0xffffff, 15);
+      camera.add(pointLight);
+      scene.add(camera);
+
+      document.getElementById("render").addEventListener("click", async function () {
+          while (scene.children.length > 0) {
+            scene.remove(scene.children[0]);
+          }
+
+          const scale = 1; 
+
+
+          const meshfile = document.getElementById("url").value;
+          const response = await fetch(meshfile);
+          const body = await response.text();
+
+          let flag = checkformat(body);
+
+          let vertices = [];
+          let indexes = [];
+          if (flag == true) {
+            parseoff(body, vertices, indexes);
+          } else {
+            parseobj(body, vertices, indexes);
+          }
+          
+
+          let ma = vertices[0]; 
+          let mi = vertices[0]; 
+          let len = vertices.length;
+
+          for (var i=0; i<len; ++i) {
+            if (ma<vertices[i]) {
+              ma = vertices[i];
+            }
+          }
+
+          for (var i=0; i<len; ++i) {
+            if (mi>vertices[i]) {
+              mi = vertices[i];
+            }
+          }
+
+          let d = Math.sqrt(ma*ma+mi*mi);
+          let mean = (ma-mi)/2+mi;
+          for (var i=0; i<len; i++) {
+            vertices[i] = (vertices[i]-mi)/d;
+          }
+
+          let v1 = new Float32Array(vertices);
+
+          let t = new Int32Array(indexes);
+
+
+          camera.position.z = 10;
+
+
+          
+          const gauss_geometry = new THREE.BufferGeometry();
+          gauss_geometry.setIndex(indexes);
+          gauss_geometry.setAttribute(
+            "position",
+            new THREE.BufferAttribute(v1, 3 ),
+            false
+          );
+          const mean_geometry = gauss_geometry.clone();
+          const first_geometry = gauss_geometry.clone();
+          const second_geometry = gauss_geometry.clone();
+
+          const beginpos = -3.3;
+          gauss_geometry.computeBoundingSphere();
+          const radius = gauss_geometry.boundingSphere.radius+1;
+
+          gauss_geometry.setAttribute(
+            "color",
+            new THREE.Float32BufferAttribute(gcolors, 3)
+          );
+          const gauss_material = new THREE.MeshBasicMaterial({
+            vertexColors: true,
+          });
+          const gauss_mesh = new THREE.Mesh(gauss_geometry, gauss_material);
+          gauss_mesh.scale.setScalar(scale);
+          gauss_mesh.position.set(beginpos, 0, 0);
+          scene.add(gauss_mesh);
+
+          mean_geometry.setAttribute(
+            "color",
+            new THREE.Float32BufferAttribute(mcolors, 3)
+          );
+          const mean_material = new THREE.MeshBasicMaterial({
+            vertexColors: true,
+          });
+          const mean_mesh = new THREE.Mesh(mean_geometry, mean_material);
+          mean_mesh.scale.setScalar(scale);
+          const mr = radius + beginpos;
+          mean_mesh.position.set(mr, 0, 0);
+          scene.add(mean_mesh);
+
+          first_geometry.setAttribute(
+            "color",
+            new THREE.Float32BufferAttribute(fcolors, 3)
+          );
+          const first_material = new THREE.MeshBasicMaterial({
+            vertexColors: true,
+          });
+          const first_mesh = new THREE.Mesh(first_geometry, first_material);
+          first_mesh.scale.setScalar(scale);
+          const fr = mr + radius;
+          first_mesh.position.set(fr, 0, 0);
+          scene.add(first_mesh);
+
+          second_geometry.setAttribute(
+            "color",
+            new THREE.Float32BufferAttribute(scolors, 3)
+          );
+          const second_material = new THREE.MeshBasicMaterial({
+            vertexColors: true,
+          });
+          const second_mesh = new THREE.Mesh(second_geometry, second_material);
+          second_mesh.scale.setScalar(scale);
+          const sr = fr + radius;
+          second_mesh.position.set(sr, 0, 0);
+          scene.add(second_mesh);
+
+          console.log("rendered");
+        });
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.minDistance = -1000;
+      controls.maxDistance = 1000;
+
+      window.addEventListener("resize", onWindowResize);
+
+      animate();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    </script>
+
+    <div id="ui">
+      <input id="url" name="filename" placeholder="Mesh url" type="text" />
+      <button id="button" type="submit">Compute curvatures</button>
+    </div>
+    <div id="text">
+      <button id="render" type="submit">Render</button>
+      <h1 id="status"></h1>
+    </div>
+  </body>
+
+  <head>
+    <style>
+      body {
+        margin: 0;
+      }
+      #ui {
+        text-align: center;
+        left: 780px;
+        position: absolute;
+        z-index: 100;
+      }
+      #url {
+        width: 190px;
+        font-family: monospace;
+        font-size: 15px;
+      }
+      #button {
+        font-family: monospace;
+        font-size: 15px;
+      }
+      #text {
+        text-align: center;
+        position: absolute;
+        z-index: 90;
+        top: 50px;
+        left: 870px;
+      }
+      #render {
+        text-align: center;
+        font-size: 15px;
+        font-family: monospace;
+        color: blue;
+        font-size: 15px;
+      }
+      #status {
+        color: white;
+      }
+    </style>
+  </head>
+</html>
