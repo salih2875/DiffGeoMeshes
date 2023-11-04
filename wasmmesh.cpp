@@ -1,10 +1,10 @@
-#define _USE_MATH_DEFINES
-#include <math.h>
 #include <vector>
+#include <iterator>
 #include <fstream>
 #include <string>
 #include <string.h>
 #include <sstream>
+#include <math.h>
 #include <iostream>
 #include <algorithm>
 
@@ -16,56 +16,8 @@ public:
     double x;
     double y;
     double z;
-
     Vertix() : x(0) , y(0), z(0) {}
     Vertix(double x, double y, double z) : x(x), y(y), z(z) { }
-
-    Vertix operator*(const double& a) {
-        return Vertix(x * a, y * a, z * a);
-    }
-
-    Vertix& operator*=(const double& a) {
-        x = x * a;
-        y = y * a;
-        z = z * a;
-        return *this;
-    }
-    Vertix operator-() {
-        return Vertix(-x, -y, -z);
-    }
-
-    double norm_of_vector()
-    {
-        double norm = sqrt(x * x + y * y + z * z);
-        return norm;
-    }
-
-    static double dot_product(Vertix a, Vertix b)
-    {
-        double dotp = a.x * b.x + a.y * b.y + a.z * b.z;
-        return dotp;
-    }
-
-    static double angleof(Vertix a, Vertix b)
-    {
-        double norm_of_a = a.norm_of_vector();
-        double norm_of_b = b.norm_of_vector();
-        double dotp = dot_product(a, b);
-
-
-        // TODO: maybe check for norms or dot product being zero
-        double angle = acos(dotp / (norm_of_a * norm_of_b));
-        return angle;
-    }
-
-    static Vertix vector_from_points(Vertix b, Vertix e)
-    {
-        Vertix c;
-        c.x = b.x - e.x;
-        c.y = b.y - e.y;
-        c.z = b.z - e.z;
-        return c;
-    }
 };
 
 class Triangle
@@ -74,22 +26,8 @@ public:
     int x;
     int y;
     int z;
-
-    void change_indexes(int index, int &y1, int &z1)
-    {
-        if (x == index) {
-            y1 = y;
-            z1 = z;
-        }
-        else if (y == index) {
-            y1 = x;
-            z1 = z;
-        }
-        else if (z == index) {
-            y1 = x;
-            z1 = y;
-        }
-    }
+    Triangle() : x(0), y(0), z(0) {}
+    Triangle(int x, int y, int z) : x(x), y(y), z(z) {} 
 };
 
 class Color
@@ -102,13 +40,14 @@ public:
     Color(double r, double g, double b) : r(r), g(g), b(b) { }
 };
 
+// declare true_vertices vector in main and in read_file make it equal to vertices
 void read_file(std::ifstream &file, std::vector<Vertix> &vertices, std::vector<Triangle> &triangles)
 {
     std::string current_line;
     std::getline(file, current_line);
     if (current_line != "OFF")
     {
-        throw std::runtime_error("Why no OFF header?");
+        std::runtime_error("Why no OFF header?");
     }
 
     std::getline(file, current_line);
@@ -151,6 +90,15 @@ void read_file(std::ifstream &file, std::vector<Vertix> &vertices, std::vector<T
 // find 1 ring neighborhood of x
 std::vector<Triangle> one_ring_neighborhood(int index, std::vector<Triangle> triangles)
 {
+    // std::vector<Triangle> triangles;
+    // for (size_t i=0; i<before_triangles.size(); i+=3) {
+    //     Triangle v;
+    //     v.x = before_triangles[i]; 
+    //     v.y = before_triangles[i+1];
+    //     v.z = before_triangles[i+2];
+    //     triangles.push_back(v);
+    // }
+
     std::vector<Triangle> neighborhood;
     for (auto cur_triangle : triangles)
     {
@@ -163,21 +111,82 @@ std::vector<Triangle> one_ring_neighborhood(int index, std::vector<Triangle> tri
     return neighborhood;
 }
 
+double Square(float x)
+{
+    double ans = x * x;
+    return ans;
+}
 
+
+
+double norm_of_vector(Vertix v)
+{
+    double norm = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    return norm;
+}
+
+double dot_product(Vertix a, Vertix b)
+{
+    double dotp = a.x * b.x + a.y * b.y + a.z * b.z;
+    return dotp;
+}
+
+double angleof(Vertix a, Vertix b)
+{
+    // sometimes angle>1 so acos is nan i dont know why
+    double norm_of_a = norm_of_vector(a);
+    double norm_of_b = norm_of_vector(b);
+    double dotp = dot_product(a, b);
+
+    // double checkangle = dotp / (norm_of_a*norm_of_b);
+    // std::cout << checkangle << std::endl;
+    // if (checkangle>1) {
+    //     std::cout << "angle between vectors is lower than -1" << "\n";
+    // }
+
+    double angle = acos(dotp / (norm_of_a * norm_of_b));
+    return angle;
+}
+
+Vertix vector_from_points(Vertix b, Vertix e)
+{
+    Vertix c;
+    c.x = b.x - e.x;
+    c.y = b.y - e.y;
+    c.z = b.z - e.z;
+    return c;
+}
+
+Triangle change_indexes(Triangle triangle, int index)
+{
+    std::vector<int> dummyvec{triangle.x, triangle.y, triangle.z};
+
+    dummyvec.erase(std::remove(dummyvec.begin(), dummyvec.end(), index), dummyvec.end());
+
+    Triangle t;
+
+    t.x = index;
+
+    t.y = dummyvec[0];
+
+    t.z = dummyvec[1];
+
+    return t;
+}
 
 int check_triangle_obtuse(std::vector<Vertix> vertices, Triangle triangle, int index)
 {
     int type_of_obtuse = 0;
 
-
+    std::vector<int> dummyvec{triangle.x, triangle.y, triangle.z};
+    dummyvec.erase(std::remove(dummyvec.begin(), dummyvec.end(), index), dummyvec.end());
     int x1 = index;
-    int y1;
-    int z1;
-    triangle.change_indexes(index, y1, z1);
-    
-    Vertix a = Vertix::vector_from_points(vertices[x1], vertices[y1]);
-    Vertix b = Vertix::vector_from_points(vertices[x1], vertices[z1]);
-    double alpha = Vertix::angleof(a, b);
+    int y1 = dummyvec[0];
+    int z1 = dummyvec[1];
+
+    Vertix a = vector_from_points(vertices[x1], vertices[y1]);
+    Vertix b = vector_from_points(vertices[x1], vertices[z1]);
+    double alpha = angleof(a, b);
 
     double pi = M_PI / 2;
 
@@ -185,18 +194,18 @@ int check_triangle_obtuse(std::vector<Vertix> vertices, Triangle triangle, int i
     {
         type_of_obtuse = 1;
     }
-    Vertix a1 = -a;
-    Vertix b1 = Vertix::vector_from_points(vertices[y1], vertices[z1]);
-    double beta = Vertix::angleof(a1, b1);
+    Vertix a1 = vector_from_points(vertices[y1], vertices[x1]);
+    Vertix b1 = vector_from_points(vertices[y1], vertices[z1]);
+    double beta = angleof(a1, b1);
 
     if (beta > pi)
     {
         type_of_obtuse = 2;
     }
 
-    Vertix a2 = -b;
-    Vertix b2 = -b1;
-    double theta = Vertix::angleof(a2, b2);
+    Vertix a2 = vector_from_points(vertices[z1], vertices[x1]);
+    Vertix b2 = vector_from_points(vertices[z1], vertices[y1]);
+    double theta = angleof(a2, b2);
 
     if (theta > pi)
     {
@@ -211,29 +220,35 @@ double voronoi_area_of_non_obtuse(std::vector<Vertix> vertices, Triangle triangl
     double a_mixed = 0;
     // int x1{triangle.x}; int y1{triangle.y}; int z1{triangle.z};
 
+    std::vector<int> dummyvec{triangle.x, triangle.y, triangle.z};
+
+    dummyvec.erase(std::remove(dummyvec.begin(), dummyvec.end(), index), dummyvec.end());
+
     int x1 = index;
-    int y1;
-    int z1;
-    triangle.change_indexes(index, y1, z1);
+
+    int y1 = dummyvec[0];
+
+    int z1 = dummyvec[1];
 
     // our index is point P in triangle PRQ
     // Vectors to P
-    Vertix a = Vertix::vector_from_points(vertices[x1], vertices[y1]);
-    Vertix b = Vertix::vector_from_points(vertices[x1], vertices[z1]);
+    Vertix a = vector_from_points(vertices[x1], vertices[y1]);
+    Vertix b = vector_from_points(vertices[x1], vertices[z1]);
 
     // angle Q
-    Vertix v1 = -a;
-    Vertix v2 = Vertix::vector_from_points(vertices[y1], vertices[z1]);
+    Vertix v1 = vector_from_points(vertices[y1], vertices[x1]);
+    Vertix v2 = vector_from_points(vertices[y1], vertices[z1]);
 
     // angle R
-    Vertix v3 = -b;
-    Vertix v4 = -v2;
+    Vertix v3 = vector_from_points(vertices[z1], vertices[x1]);
+    Vertix v4 = vector_from_points(vertices[z1], vertices[y1]);
 
-    double norm1 = a.norm_of_vector();
-    double norm2 = b.norm_of_vector();
-    // TODO: check if angleof >1 or angleof<-1 
-    double cot_q = 1 / tan(Vertix::angleof(v1, v2));
-    double cot_r = 1 / tan(Vertix::angleof(v3, v4));
+    double norm1 = norm_of_vector(a);
+    double norm2 = norm_of_vector(b);
+    // double angleq = angleof(v1,v2);
+    // double angler = angleof(v3,v4);
+    double cot_q = 1 / tan(angleof(v1, v2));
+    double cot_r = 1 / tan(angleof(v3, v4));
 
     a_mixed = (cot_q * norm1 * norm1 + cot_r * norm2 * norm2) / 8;
     return a_mixed;
@@ -243,30 +258,50 @@ double voronoi_area_of_obtuse(std::vector<Vertix> vertices, Triangle triangle, i
 {
     double a_mixed = 0;
 
+    // testing deletion
+    std::vector<int> dummyvec{triangle.x, triangle.y, triangle.z};
+    dummyvec.erase(std::remove(dummyvec.begin(), dummyvec.end(), index), dummyvec.end());
     int x1 = index;
-    int y1;
-    int z1;
-    triangle.change_indexes(index, y1, z1);
+    int y1 = dummyvec[0];
+    int z1 = dummyvec[1];
 
-    Vertix a1 = Vertix::vector_from_points(vertices[x1], vertices[y1]);
-    Vertix b1 =  Vertix::vector_from_points(vertices[x1], vertices[z1]);
-    Vertix c1 = Vertix::vector_from_points(vertices[y1], vertices[z1]);
+    Vertix const a1 = vector_from_points(vertices[x1], vertices[y1]);
+    Vertix const b1 = vector_from_points(vertices[x1], vertices[z1]);
+    Vertix const c1 = vector_from_points(vertices[y1], vertices[z1]);
 
-    double a = a1.norm_of_vector();
-    double b =b1.norm_of_vector();
-    double c = c1.norm_of_vector();
-    double p = (a + b + c) / 2;
-    // TODO: check expression in sqrt is negative 
+    const double a = norm_of_vector(a1);
+    const double b = norm_of_vector(b1);
+    const double c = norm_of_vector(c1);
+    const double p = (a + b + c) / 2;
     a_mixed = sqrt(p * (p - a) * (p - b) * (p - c));
 
     return a_mixed;
 }
 
-double A_mixed(std::vector<Vertix> vertices, std::vector<Triangle> neighbourhood, int index)
+double A_mixed(std::vector<Vertix> vertices, std::vector<Triangle> triangles, int index)
 {
+    // std::vector<Vertix> vertices;
+    // for (size_t i=0; i<before_vertices.size(); i+=3) {
+    //     Vertix v;
+    //     v.x = before_vertices[i]; 
+    //     v.y = before_vertices[i+1];
+    //     v.z = before_vertices[i+2];
+    //     vertices.push_back(v);
+    // }
+    
+    // std::vector<Triangle> triangles;
+    // for (size_t i=0; i<before_triangles.size(); i+=3) {
+    //     Triangle v;
+    //     v.x = before_triangles[i]; 
+    //     v.y = before_triangles[i+1];
+    //     v.z = before_triangles[i+2];
+    //     triangles.push_back(v);
+    // }
+
     double amixed = 0;
+    std::vector<Triangle> neighborhood = one_ring_neighborhood(index, triangles);
     double sum = 0;
-    for (auto triangle : neighbourhood)
+    for (auto triangle : neighborhood)
     {
         int flag = check_triangle_obtuse(vertices, triangle, index);
         if (flag == 0)
@@ -288,69 +323,77 @@ double A_mixed(std::vector<Vertix> vertices, std::vector<Triangle> neighbourhood
     return amixed;
 }
 
-double mean_curvature(std::vector<Vertix> vertices, std::vector<Triangle> neighbourhood, int index, double A_mixed_value)
+double mean_curvature(std::vector<Vertix> vertices, std::vector<Triangle> triangles, int index, double A_mixed_value)
 {
     // our index is P opposite angles are q and r
     Vertix meancurv{0, 0, 0};
 
-    for (auto triangle : neighbourhood)
+    for (auto triangle : triangles)
     {
+        std::vector<int> dummyvec{triangle.x, triangle.y, triangle.z};
+        dummyvec.erase(std::remove(dummyvec.begin(), dummyvec.end(), index), dummyvec.end());
         int x1 = index;
-        int y1;
-        int z1;
-        triangle.change_indexes(index, y1, z1);
+        int y1 = dummyvec[0];
+        int z1 = dummyvec[1];
 
         // our index is point P in triangle PRQ
         // Vectors to P
-        Vertix a = Vertix::vector_from_points(vertices[x1], vertices[y1]);
-        Vertix b = Vertix::vector_from_points(vertices[x1], vertices[z1]);
+        Vertix a = vector_from_points(vertices[x1], vertices[y1]);
+        Vertix b = vector_from_points(vertices[x1], vertices[z1]);
 
         // angle Q
-        Vertix v1 = -a;
-        Vertix v2 = Vertix::vector_from_points(vertices[y1], vertices[z1]);
+        Vertix v1 = vector_from_points(vertices[y1], vertices[x1]);
+        Vertix v2 = vector_from_points(vertices[y1], vertices[z1]);
 
         // angle R
-        Vertix v3 = -b;
-        Vertix v4 = -v2;
+        Vertix v3 = vector_from_points(vertices[z1], vertices[x1]);
+        Vertix v4 = vector_from_points(vertices[z1], vertices[y1]);
 
-        // TODO: check if tan is defined
-        double cot_q = 1 / tan(Vertix::angleof(v1, v2));
-        double cot_r = 1 / tan(Vertix::angleof(v3, v4));
+        double const cot_q = 1 / tan(angleof(v1, v2));
+        double cot_r = 1 / tan(angleof(v3, v4));
         meancurv.x += cot_q * b.x + cot_r * a.x;
         meancurv.y += cot_q * b.y + cot_r * a.y;
         meancurv.z += cot_q * b.z + cot_r * a.z;
     }
 
-    // TODO: check if A_mixed is not zero
     double denom = 1 / (2 * A_mixed_value);
 
     Vertix mean;
     mean.x = meancurv.x * denom;
     mean.y = meancurv.y * denom;
     mean.z = meancurv.z * denom;
-    double Kh = mean.norm_of_vector() / 2;
+    double Kh = norm_of_vector(mean) / 2;
     return Kh;
 }
 
-double gauss_curvature(std::vector<Vertix> vertices, std::vector<Triangle> neighbourhood, int index, double A_mixed_value)
+double gauss_curvature(std::vector<Vertix> vertices, std::vector<Triangle> triangles, int index, double A_mixed_value)
 {
+    // std::vector<Vertix> vertices;
+    // for (size_t i=0; i<before_vertices.size(); i+=3) {
+    //     Vertix v;
+    //     v.x = before_vertices[i]; 
+    //     v.y = before_vertices[i+1];
+    //     v.z = before_vertices[i+2];
+    //     vertices.push_back(v);
+    // }
+    
     double sum = 0;
-    for (auto triangle : neighbourhood)
+    for (auto triangle : triangles)
     {
+        std::vector<int> dummyvec{triangle.x, triangle.y, triangle.z};
+        dummyvec.erase(std::remove(dummyvec.begin(), dummyvec.end(), index), dummyvec.end());
         int x1 = index;
-        int y1;
-        int z1;
-        triangle.change_indexes(index, y1, z1);
+        int y1 = dummyvec[0];
+        int z1 = dummyvec[1];
 
-        Vertix a = Vertix::vector_from_points(vertices[x1], vertices[y1]);
-        Vertix b = Vertix::vector_from_points(vertices[x1], vertices[z1]);
+        Vertix const a = vector_from_points(vertices[x1], vertices[y1]);
+        Vertix const b = vector_from_points(vertices[x1], vertices[z1]);
 
-        double theta = Vertix::angleof(a, b);
+        double theta = angleof(a, b);
 
         sum += theta;
     }
 
-    // TODO: check if A_mixed is not zero
     double gauss = (2 * M_PI - sum) / A_mixed_value;
     return gauss;
 }
@@ -363,7 +406,6 @@ double first_principal(double meancurv, double gausscurv)
         delta = meancurv * meancurv - gausscurv;
     }
 
-    // TODO: check that delta is not negative
     double k = meancurv + sqrt(delta);
     return k;
 }
@@ -376,10 +418,10 @@ double second_principal(double meancurv, double gausscurv)
         delta = meancurv * meancurv - gausscurv;
     }
 
-    // TODO: check that delta is not negative
     double k = meancurv - sqrt(delta);
     return k;
 }
+
 
 void normalize(double *scalars,int sv) {
     for (int i=0; i<sv; ++i) {
@@ -706,6 +748,7 @@ void printgauss(int sv, int st, double* before_vertices, int* before_triangles, 
         mean[i] = mean_curvature(vertices,neighborhood, i, amixed);
         first[i] = first_principal(mean[i], gauss[i]);
         second[i] = second_principal(mean[i], gauss[i]);
+        // printf("Try number %d Gauss is: %f\n", i, m);
     }
 
     normalize(gauss,sv);
@@ -735,9 +778,13 @@ void printgauss(int sv, int st, double* before_vertices, int* before_triangles, 
         scolors[i] = vscolors[i];
     }
 
+
+    // for (int i=0; i<sv; ++i ) printf("%d %f\n",i, gcolors[i]);
 }
 
 }
+
+
 
 
 int main(int argc, char *argv[])
