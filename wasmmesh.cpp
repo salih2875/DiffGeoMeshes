@@ -40,7 +40,6 @@ public:
     Color(double r, double g, double b) : r(r), g(g), b(b) { }
 };
 
-// declare true_vertices vector in main and in read_file make it equal to vertices
 void read_file(std::ifstream &file, std::vector<Vertix> &vertices, std::vector<Triangle> &triangles)
 {
     std::string current_line;
@@ -90,15 +89,6 @@ void read_file(std::ifstream &file, std::vector<Vertix> &vertices, std::vector<T
 // find 1 ring neighborhood of x
 std::vector<Triangle> one_ring_neighborhood(int index, std::vector<Triangle> triangles)
 {
-    // std::vector<Triangle> triangles;
-    // for (size_t i=0; i<before_triangles.size(); i+=3) {
-    //     Triangle v;
-    //     v.x = before_triangles[i]; 
-    //     v.y = before_triangles[i+1];
-    //     v.z = before_triangles[i+2];
-    //     triangles.push_back(v);
-    // }
-
     std::vector<Triangle> neighborhood;
     for (auto cur_triangle : triangles)
     {
@@ -133,16 +123,11 @@ double dot_product(Vertix a, Vertix b)
 
 double angleof(Vertix a, Vertix b)
 {
-    // sometimes angle>1 so acos is nan i dont know why
+    // sometimes angle>1 so acos is nan
+    // maybe i should check it 
     double norm_of_a = norm_of_vector(a);
     double norm_of_b = norm_of_vector(b);
     double dotp = dot_product(a, b);
-
-    // double checkangle = dotp / (norm_of_a*norm_of_b);
-    // std::cout << checkangle << std::endl;
-    // if (checkangle>1) {
-    //     std::cout << "angle between vectors is lower than -1" << "\n";
-    // }
 
     double angle = acos(dotp / (norm_of_a * norm_of_b));
     return angle;
@@ -157,22 +142,6 @@ Vertix vector_from_points(Vertix b, Vertix e)
     return c;
 }
 
-Triangle change_indexes(Triangle triangle, int index)
-{
-    std::vector<int> dummyvec{triangle.x, triangle.y, triangle.z};
-
-    dummyvec.erase(std::remove(dummyvec.begin(), dummyvec.end(), index), dummyvec.end());
-
-    Triangle t;
-
-    t.x = index;
-
-    t.y = dummyvec[0];
-
-    t.z = dummyvec[1];
-
-    return t;
-}
 
 int check_triangle_obtuse(std::vector<Vertix> vertices, Triangle triangle, int index)
 {
@@ -280,24 +249,6 @@ double voronoi_area_of_obtuse(std::vector<Vertix> vertices, Triangle triangle, i
 
 double A_mixed(std::vector<Vertix> vertices, std::vector<Triangle> triangles, int index)
 {
-    // std::vector<Vertix> vertices;
-    // for (size_t i=0; i<before_vertices.size(); i+=3) {
-    //     Vertix v;
-    //     v.x = before_vertices[i]; 
-    //     v.y = before_vertices[i+1];
-    //     v.z = before_vertices[i+2];
-    //     vertices.push_back(v);
-    // }
-    
-    // std::vector<Triangle> triangles;
-    // for (size_t i=0; i<before_triangles.size(); i+=3) {
-    //     Triangle v;
-    //     v.x = before_triangles[i]; 
-    //     v.y = before_triangles[i+1];
-    //     v.z = before_triangles[i+2];
-    //     triangles.push_back(v);
-    // }
-
     double amixed = 0;
     std::vector<Triangle> neighborhood = one_ring_neighborhood(index, triangles);
     double sum = 0;
@@ -368,15 +319,6 @@ double mean_curvature(std::vector<Vertix> vertices, std::vector<Triangle> triang
 
 double gauss_curvature(std::vector<Vertix> vertices, std::vector<Triangle> triangles, int index, double A_mixed_value)
 {
-    // std::vector<Vertix> vertices;
-    // for (size_t i=0; i<before_vertices.size(); i+=3) {
-    //     Vertix v;
-    //     v.x = before_vertices[i]; 
-    //     v.y = before_vertices[i+1];
-    //     v.z = before_vertices[i+2];
-    //     vertices.push_back(v);
-    // }
-    
     double sum = 0;
     for (auto triangle : triangles)
     {
@@ -722,6 +664,7 @@ void interpolate(double* scalars, int sv, std::vector<double> &colors) {
     }
 }
 
+// WASM export function 
 extern "C" {
 void printgauss(int sv, int st, double* before_vertices, int* before_triangles, double* gauss, double* mean, double* first, double* second, double* gcolors, double* mcolors, double* fcolors, double* scolors) {
     std::vector<Vertix> vertices;
@@ -777,9 +720,6 @@ void printgauss(int sv, int st, double* before_vertices, int* before_triangles, 
     for (int i=0; i<vscolors.size(); ++i) {
         scolors[i] = vscolors[i];
     }
-
-
-    // for (int i=0; i<sv; ++i ) printf("%d %f\n",i, gcolors[i]);
 }
 
 }
