@@ -9,7 +9,6 @@
 #include <algorithm>
 #include "colormap.h"
 
-
 class Vertix
 {
 public:
@@ -89,12 +88,6 @@ std::vector<Triangle> one_ring_neighborhood(int index, std::vector<Triangle> tri
     }
 
     return neighborhood;
-}
-
-double Square(float x)
-{
-    double ans = x * x;
-    return ans;
 }
 
 double norm_of_vector(Vertix v)
@@ -214,7 +207,6 @@ double voronoi_area_of_obtuse(std::vector<Vertix> vertices, Triangle triangle, i
 {
     double a_mixed = 0;
 
-    // testing deletion
     std::vector<int> dummyvec{triangle.x, triangle.y, triangle.z};
     dummyvec.erase(std::remove(dummyvec.begin(), dummyvec.end(), index), dummyvec.end());
     int x1 = index;

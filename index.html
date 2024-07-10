@@ -10,9 +10,9 @@
       }
     </script>
 
-    <script src="parsemesh.js"></script>
-    <script src="wasm.js"></script>
-    <script src="gausswasm.js"></script>
+    <script src="/src/parsemesh.js"></script>
+    <script src="/src/wasm.js"></script>
+    <script src="/src/gausswasm.js"></script>
 
     <script type="module">
       import * as THREE from "three";
@@ -110,7 +110,7 @@
           const first_geometry = gauss_geometry.clone();
           const second_geometry = gauss_geometry.clone();
 
-          const beginpos = -3.3;
+          const beginpos = -3.15;
           gauss_geometry.computeBoundingSphere();
           const radius = gauss_geometry.boundingSphere.radius + 1;
 
@@ -308,6 +308,7 @@
         left: 50%;
         right: 0;
         margin: auto;
+        border-radius: 12px;
       }
       #text {
         position: absolute;
@@ -327,6 +328,7 @@
         right: 0;
         top: 0;
         margin: auto;
+        border-radius: 12px;
       }
       #status {
         color: white;
