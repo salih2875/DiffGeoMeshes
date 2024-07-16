@@ -99,129 +99,82 @@
 
           camera.position.z = 10;
 
-          const gauss_geometry = new THREE.BufferGeometry();
-          gauss_geometry.setIndex(indexes);
-          gauss_geometry.setAttribute(
-            "position",
-            new THREE.BufferAttribute(v1, 3),
-            false
-          );
-          const mean_geometry = gauss_geometry.clone();
-          const first_geometry = gauss_geometry.clone();
-          const second_geometry = gauss_geometry.clone();
+          const create_geometry = (color, radius) => {
+            const geometry = new THREE.BufferGeometry();
+            geometry.setIndex(indexes);
+            geometry.setAttribute(
+              "position",
+              new THREE.BufferAttribute(v1, 3),
+              false
+            );
+            geometry.computeBoundingSphere();
+            geometry.setAttribute(
+              "color",
+              new THREE.Float32BufferAttribute(color, 3)
+            );
+            const material = new THREE.MeshBasicMaterial({
+              vertexColors: true,
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.scale.setScalar(scale);
+            mesh.position.set(radius, 0, 0);
+            return mesh;
+          };
 
-          const beginpos = -3.15;
-          gauss_geometry.computeBoundingSphere();
-          const radius = gauss_geometry.boundingSphere.radius + 1;
-
-          gauss_geometry.setAttribute(
-            "color",
-            new THREE.Float32BufferAttribute(gcolors, 3)
-          );
-          const gauss_material = new THREE.MeshBasicMaterial({
-            vertexColors: true,
-          });
-          const gauss_mesh = new THREE.Mesh(gauss_geometry, gauss_material);
-          gauss_mesh.scale.setScalar(scale);
-          gauss_mesh.position.set(beginpos, 0, 0);
+          const gauss_mesh = create_geometry(gcolors, -3.15);
           scene.add(gauss_mesh);
-
-          mean_geometry.setAttribute(
-            "color",
-            new THREE.Float32BufferAttribute(mcolors, 3)
-          );
-          const mean_material = new THREE.MeshBasicMaterial({
-            vertexColors: true,
-          });
-          const mean_mesh = new THREE.Mesh(mean_geometry, mean_material);
-          mean_mesh.scale.setScalar(scale);
-          const mr = radius + beginpos;
-          mean_mesh.position.set(mr, 0, 0);
+          gauss_mesh.geometry.computeBoundingSphere();
+          const radius = gauss_mesh.geometry.boundingSphere.radius + 1;
+          const mr = radius - 3.15;
+          const mean_mesh = create_geometry(mcolors, mr);
           scene.add(mean_mesh);
-
-          first_geometry.setAttribute(
-            "color",
-            new THREE.Float32BufferAttribute(fcolors, 3)
-          );
-          const first_material = new THREE.MeshBasicMaterial({
-            vertexColors: true,
-          });
-          const first_mesh = new THREE.Mesh(first_geometry, first_material);
-          first_mesh.scale.setScalar(scale);
           const fr = mr + radius;
-          first_mesh.position.set(fr, 0, 0);
-          scene.add(first_mesh);
-
-          second_geometry.setAttribute(
-            "color",
-            new THREE.Float32BufferAttribute(scolors, 3)
-          );
-          const second_material = new THREE.MeshBasicMaterial({
-            vertexColors: true,
-          });
-          const second_mesh = new THREE.Mesh(second_geometry, second_material);
-          second_mesh.scale.setScalar(scale);
+          const first_mesh = create_geometry(fcolors, fr);
           const sr = fr + radius;
-          second_mesh.position.set(sr, 0, 0);
+          scene.add(first_mesh);
+          const second_mesh = create_geometry(scolors, sr);
           scene.add(second_mesh);
 
           const fontLoader = new FontLoader();
 
+          const createTextMesh = (text, font, material, position) => {
+            const geometry = new TextGeometry(text, {
+              font: font,
+              size: 0.15,
+              depth: 0.1,
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(position.x, position.y, position.z);
+            return mesh;
+          };
+
           fontLoader.load(
             "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/fonts/helvetiker_regular.typeface.json",
             function (font) {
-              const gauss_text = new TextGeometry("Gauss Curvature", {
-                font: font,
-                size: 0.15,
-                depth: 0.1,
-              });
-              const mean_text = new TextGeometry("Mean Curvature", {
-                font: font,
-                size: 0.15,
-                depth: 0.1,
-              });
-              const first_text = new TextGeometry("First Curvature", {
-                font: font,
-                size: 0.15,
-                depth: 0.1,
-              });
-              const second_text = new TextGeometry("Second Curvature", {
-                font: font,
-                size: 0.15,
-                depth: 0.1,
-              });
               const textMaterial = new THREE.MeshBasicMaterial({
                 color: 0xffffff,
               });
-              const g_textMesh = new THREE.Mesh(gauss_text, textMaterial);
-              const m_textMesh = new THREE.Mesh(mean_text, textMaterial);
-              const f_textMesh = new THREE.Mesh(first_text, textMaterial);
-              const s_textMesh = new THREE.Mesh(second_text, textMaterial);
-              g_textMesh.position.set(
-                gauss_mesh.position.x - 0.17,
-                gauss_mesh.position.y - 0.3,
-                gauss_mesh.position.z
-              );
-              m_textMesh.position.set(
-                mean_mesh.position.x - 0.17,
-                mean_mesh.position.y - 0.3,
-                mean_mesh.position.z
-              );
-              f_textMesh.position.set(
-                first_mesh.position.x - 0.17,
-                first_mesh.position.y - 0.3,
-                first_mesh.position.z
-              );
-              s_textMesh.position.set(
-                second_mesh.position.x - 0.17,
-                second_mesh.position.y - 0.3,
-                second_mesh.position.z
-              );
 
-              scene.add(g_textMesh);
-              scene.add(m_textMesh);
-              scene.add(f_textMesh);
-              scene.add(s_textMesh);
+              const texts = [
+                { text: "Gauss Curvature", position: gauss_mesh.position },
+                { text: "Mean Curvature", position: mean_mesh.position },
+                { text: "First Curvature", position: first_mesh.position },
+                { text: "Second Curvature", position: second_mesh.position },
+              ];
+
+              texts.forEach(({ text, position }) => {
+                const textMesh = createTextMesh(
+                  text,
+                  font,
+                  textMaterial,
+                  new THREE.Vector3(
+                    position.x - 0.17,
+                    position.y - 0.3,
+                    position.z
+                  )
+                );
+                scene.add(textMesh);
+              });
             }
           );
 
