@@ -218,7 +218,7 @@
         type="text"
         value="torus.off"
       />
-      <button id="button" type="submit">Compute curvatures</button>
+      <button id="compute" type="submit">Compute</button>
       <button id="render" type="submit">Render</button>
       <h1 id="status"></h1>
     </div>
@@ -242,26 +242,45 @@
         height: 100px;
         position: absolute;
         left: 0;
-        right: 0;
+        right: 5%;
         margin: auto;
       }
       #url {
         width: 190px;
-        color: blue;
+        color: white;
+        background-color: black;
+        height: 25px;
         font-family: monospace;
         font-size: 15px;
+        font-weight: 20pt;
       }
-      #button {
-        font-family: monospace;
-        font-size: 15px;
-        width: 100px;
-        height: 50px;
-        color: blue;
+      #compute {
+        background: #5e5df0;
         position: relative;
+        top: 10%;
         left: 50%;
         right: 0;
-        margin: auto;
-        border-radius: 12px;
+        border-radius: 999px;
+        box-shadow: #5e5df0 0 10px 20px -10px;
+        box-sizing: border-box;
+        color: #ffffff;
+        cursor: pointer;
+        font-family: Inter, Helvetica, "Apple Color Emoji", "Segoe UI Emoji",
+          NotoColorEmoji, "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji",
+          EmojiSymbols, -apple-system, system-ui, "Segoe UI", Roboto,
+          "Helvetica Neue", "Noto Sans", sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 24px;
+        opacity: 1;
+        outline: 0 solid transparent;
+        padding: 15px 15px;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        width: fit-content;
+        word-break: break-word;
+        border: 0;
       }
       #text {
         position: absolute;
@@ -270,25 +289,38 @@
         left: 870px;
       }
       #render {
-        font-size: 15px;
-        font-family: monospace;
-        color: blue;
-        font-size: 15px;
-        width: 70px;
-        height: 50px;
         position: relative;
-        left: 65%;
-        right: 0;
-        top: 0;
-        margin: auto;
-        border-radius: 12px;
+        top: 20%;
+        left: 55%;
+        background-color: #13aa52;
+
+        border-radius: 999px;
+        box-shadow: #5e5df0 0 10px 20px -10px;
+        box-sizing: border-box;
+        color: #ffffff;
+        cursor: pointer;
+        font-family: Inter, Helvetica, "Apple Color Emoji", "Segoe UI Emoji",
+          NotoColorEmoji, "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji",
+          EmojiSymbols, -apple-system, system-ui, "Segoe UI", Roboto,
+          "Helvetica Neue", "Noto Sans", sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 24px;
+        opacity: 1;
+        outline: 0 solid transparent;
+        padding: 8px 18px;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        width: fit-content;
+        word-break: break-word;
+        border: 0;
       }
       #status {
         color: white;
         position: relative;
         left: 65%;
-        right: 0;
-        top: 0;
+        top: 25%;
         margin: auto;
       }
     </style>

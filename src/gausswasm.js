@@ -9,7 +9,7 @@ let scolors = [];
 
 Module.onRuntimeInitialized = async function () {
   document
-    .getElementById("button")
+    .getElementById("compute")
     .addEventListener("click", async function () {
       let timea = performance.now();
 
