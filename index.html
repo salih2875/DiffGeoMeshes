@@ -47,6 +47,14 @@
       camera.add(pointLight);
       scene.add(camera);
 
+      // Add CSS2D renderer for labels
+      const labelRenderer = new CSS2DRenderer();
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.domElement.style.position = "absolute";
+      labelRenderer.domElement.style.top = "0px";
+      labelRenderer.domElement.style.pointerEvents = "none";
+      document.body.appendChild(labelRenderer.domElement);
+
       document
         .getElementById("render")
         .addEventListener("click", async function () {
@@ -99,7 +107,7 @@
 
           camera.position.z = 10;
 
-          const create_geometry = (color, radius) => {
+          const create_geometry = (color, radius, title) => {
             const geometry = new THREE.BufferGeometry();
             geometry.setIndex(indexes);
             geometry.setAttribute(
@@ -118,65 +126,42 @@
             const mesh = new THREE.Mesh(geometry, material);
             mesh.scale.setScalar(scale);
             mesh.position.set(radius, 0, 0);
+
+            const labelDiv = document.createElement("div");
+            labelDiv.className = "label";
+            labelDiv.textContent = title;
+            labelDiv.style.backgroundColor = "transparent";
+            labelDiv.style.color = "white";
+            labelDiv.style.padding = "2px";
+            labelDiv.style.fontSize = "16px";
+            labelDiv.style.textAlign = "center";
+            labelDiv.style.fontFamily = "Arial, sans-serif";
+            labelDiv.style.fontWeight = "bold";
+            labelDiv.style.textShadow = "1px 1px 1px rgba(0,0,0,0.5)";
+
+            const label = new CSS2DObject(labelDiv);
+            label.position.set(
+              mesh.geometry.boundingSphere.radius,
+              -mesh.geometry.boundingSphere.radius + 0.5,
+              0
+            );
+            mesh.add(label);
             return mesh;
           };
 
-          const gauss_mesh = create_geometry(gcolors, -3.15);
+          const gauss_mesh = create_geometry(gcolors, -3.15, "Gauss Curvature");
           scene.add(gauss_mesh);
           gauss_mesh.geometry.computeBoundingSphere();
           const radius = gauss_mesh.geometry.boundingSphere.radius + 1;
           const mr = radius - 3.15;
-          const mean_mesh = create_geometry(mcolors, mr);
+          const mean_mesh = create_geometry(mcolors, mr, "Mean Curvature");
           scene.add(mean_mesh);
           const fr = mr + radius;
-          const first_mesh = create_geometry(fcolors, fr);
+          const first_mesh = create_geometry(fcolors, fr, "First Curvature");
           const sr = fr + radius;
           scene.add(first_mesh);
-          const second_mesh = create_geometry(scolors, sr);
+          const second_mesh = create_geometry(scolors, sr, "Second Curvature");
           scene.add(second_mesh);
-
-          const fontLoader = new FontLoader();
-
-          const createTextMesh = (text, font, material, position) => {
-            const geometry = new TextGeometry(text, {
-              font: font,
-              size: 0.15,
-              depth: 0.1,
-            });
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(position.x, position.y, position.z);
-            return mesh;
-          };
-
-          fontLoader.load(
-            "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/fonts/helvetiker_regular.typeface.json",
-            function (font) {
-              const textMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffffff,
-              });
-
-              const texts = [
-                { text: "Gauss Curvature", position: gauss_mesh.position },
-                { text: "Mean Curvature", position: mean_mesh.position },
-                { text: "First Curvature", position: first_mesh.position },
-                { text: "Second Curvature", position: second_mesh.position },
-              ];
-
-              texts.forEach(({ text, position }) => {
-                const textMesh = createTextMesh(
-                  text,
-                  font,
-                  textMaterial,
-                  new THREE.Vector3(
-                    position.x - 0.17,
-                    position.y - 0.3,
-                    position.z
-                  )
-                );
-                scene.add(textMesh);
-              });
-            }
-          );
 
           console.log("rendered");
         });
@@ -197,6 +182,7 @@
       function animate() {
         requestAnimationFrame(animate);
         renderer.render(scene, camera);
+        labelRenderer.render(scene, camera); // Render the labels
       }
 
       function onWindowResize() {
