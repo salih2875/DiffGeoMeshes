@@ -4,8 +4,8 @@
     <script type="importmap">
       {
         "imports": {
-          "three": "https://unpkg.com/three@0.138.3/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.138.3/examples/jsm/"
+          "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
         }
       }
     </script>
@@ -59,6 +59,8 @@
         .getElementById("render")
         .addEventListener("click", async function () {
           // clean up
+          document.querySelectorAll("div.label").forEach((div) => div.remove());
+
           while (scene.children.length > 0) {
             scene.remove(scene.children[0]);
           }
